@@ -26,6 +26,7 @@ export class TokenClient {
         args.redirect_uri = args.redirect_uri || this._settings.redirect_uri;
 
         var basicAuth = undefined;
+        var urlQuery = "";
         var client_authentication = args._client_authentication || this._settings._client_authentication;
         delete args._client_authentication;
 
@@ -54,13 +55,19 @@ export class TokenClient {
         if(client_authentication == "client_secret_basic")
         {
             basicAuth = args.client_id + ':' + args.client_secret;
+            urlQuery = "?grant_type=" + encodeURIComponent(args.grant_type) + 
+                   "&redirect_uri="+ encodeURIComponent(args.redirect_uri) +
+                   "&code="+ encodeURIComponent(args.code) + 
+                   "&code_verifier=" + args.code_verifier;
+
+            args = {};
             delete args.client_id;
             delete args.client_secret;
         }
 
         return this._metadataService.getTokenEndpoint(false).then(url => {
             Log.debug("TokenClient.exchangeCode: Received token endpoint");
-            return this._jsonService.postForm(url, args, basicAuth).then(response => {
+            return this._jsonService.postForm(url + urlQuery, args, basicAuth).then(response => {
                 Log.debug("TokenClient.exchangeCode: response received");
                 return response;
             });
